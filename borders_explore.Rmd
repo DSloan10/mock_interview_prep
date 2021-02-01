@@ -3,4 +3,89 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+**Please prepare a 1 to 2 page analysis summary answering the question below.**
+
+**In order to help inform the planning for provision of cancer treatment services in NHS Borders, we would like to gain better understanding of the incidence of cancer in NHS Borders.**
+
+**You will present your findings back to us during the Mock Interviews. Presentations will be 5 minutes long**
+
+
+**Remember** "A better understanding of the incidence of cancer in NHS Borders"
+
+1. Find the definition of incidence in the documentation provided:
+
+"Incidence is the total number of new cases (registrations) of the cancer diagnosed in Scotland for the given period."
+
+2. Next, which insights could be *actionable*. Focus on these. 
+
+The question refers to the helping "inform the planning for *provision* of cancer service in NHS Borders". This should be the focus for insights that are actionable:
+
+Geographic considerations should be taken into account. Where are the higher incidents of certain types of treatment. 
+
+Where are current cancer treatment services available
+
+How can services be improved for those suffering from cancer in the area, given the number of incidence. 
+
+```{r}
+library(tidyverse)
+library(janitor)
+
+health_board_data <- read_csv("data/opendata_inc9418_hb.csv") %>% clean_names()
+scotland_data <- read_csv("data/opendata_inc9418_scotland.csv") %>% clean_names()
+regional_data <- read_csv("data/opendata_inc9418_region.csv") %>%  clean_names()
+hb_codes <- read_csv("data/geography_codes_and_labels_hb2014_01042019.csv") %>% clean_names()
+```
+
+Let's take a look at the number of these columns and work out how many we have and how they should be organised from here.
+
+```{r}
+health_board_data %>% 
+  colnames()
+```
+
+OK, so what becomes immedietely apparent is that the data doesn't seem to be broken down into age group. Instead, we are only given an incidences_all_ages column, along with wath is described as a "crude rate". For a task in this timeframe, with one person non-technical interviewing and with five minutes to talk about, I don't think it would be useful to go to deeply into the confidence intervals at this stage. If we are struggling for useful (i.e. *actionable*) insights, then using some of these 95 confidence intervals could be good as a last resort. 
+
+What we do have is a breakdown of different types of cancer, and a breakdown in terms of the sexes. We should be able to get some insights here, but what conclusions could be drawn linking back to the "planning for provision of cancer treatment services in NHS Borders". We might have to compare rates to that of surrounding health boards, the overall region and Scotland as a whole. Think it might be best to just play about with this first lot of data tonight though and see if there are any striking figures in terms of types of cancer over the years. 
+
+```{r}
+borders_data <-
+health_board_data %>% 
+  filter(hb == "S08000016")
+```
+
+So once we extract just the NHS borders data, what we find are left with is 3400 observations. Now let's see how many cancer types we're dealing with:
+
+```{r}
+borders_data %>% 
+  distinct(cancer_site)
+```
+
+So we have 52 cancer sites/types, including an "All cancer types" label. 
+
+```{r}
+borders_data %>% 
+  distinct(sex_qf)
+```
+
+According to the accompanying documentation, "Confidence intervals for age-standardised rates (EASR and WASR) have been calculated using a formula which works only when numbers are sufficiently large. They are therefore set to 'not applicable' in the event of there being fewer than 20 cases."
+
+```{r}
+borders_data %>% 
+  summarise(across(.fns = ~sum(is.na(.x))))
+```
+
+So there don't seem to be any observations that are relvant to our early analysis that are NAs. There do seem to be a number of NAs in the "sex_qf" column which I'm still a little confused on, the alternative simply being "d". The NAs referenced above can also be seen. 
+
+Let's just see if we can begin by plotting the differnt types of cancer and their prevalence by both number an rate.
+
+```{r}
+borders_data %>% 
+filter(cancer_site != "All cancer types",
+       sex == "All") %>%
+ggplot() +
+  aes(x = year, y = incidences_all_ages, color = cancer_site) +
+  geom_line() +
+  theme(legend.position = "none")
+```
+
 
