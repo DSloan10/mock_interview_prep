@@ -112,5 +112,25 @@ ggplot() +
   geom_point(aes(x = year, y = crude_rate), colour = "red") +
   geom_line (aes(x = year, y = crude_rate), colour = "red")
 ```
+
+```{r}
+borders_data %>% 
+  mutate(total_incidences = )
 ```
+
+Right, the above idea can be left for later. For now, I want to replicate three graphs that have been provided for the overall Scottish context. These graphs are contained in the Cancer Incidence in Scotland (2016) report. Here is the plan (refer back to the document for visual reference):
+
+
+1. Cancer incidence in Scotland, 1992-2016. Number of cases and age-adjusted
+incidence rate by sex.
+
+```{r}
+borders_data %>%
+  
+```
+
+
+2. Figure 4. Most common 20 cancers in Scotland in 2016 for females and males (ordered by total for all persons)
+
+3. Figure 5. 10 year percentage change in incidence rate for 20 most common cancers in Scotland
 
