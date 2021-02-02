@@ -118,6 +118,11 @@ ggplot() +
 #  mutate(total_incidences = )
 ```
 
+```{r}
+borders_data %>%
+  distinct(year)
+```
+
 Right, the above idea can be left for later. For now, I want to replicate three graphs that have been provided for the overall Scottish context. These graphs are contained in the Cancer Incidence in Scotland (2016) report. Here is the plan (refer back to the document for visual reference):
 
 
@@ -125,6 +130,7 @@ Right, the above idea can be left for later. For now, I want to replicate three 
 incidence rate by sex.
 
 ```{r}
+#These graphs can be easily changed later on to accommodate other rates, especially when we look a bit further into the easr and wasr rates.
 borders_data %>%
   filter(cancer_site == "All cancer types",
          sex != "All") %>%
@@ -132,12 +138,119 @@ ggplot() +
   aes(x = year, y = incidences_all_ages, colour = sex) +
   geom_line(linetype = "dashed") +
   geom_line(aes(x = year, y = crude_rate)) +
-  scale_x_continuous(breaks = 2) +
-  scale_y_continuous(sec.axis = sec_axis(~./8, name = "\n")) +
+  scale_x_continuous(breaks = seq(1994, 2018, by = 2 )) +
+  scale_y_continuous(sec.axis = sec_axis(~./8, name = "Crude Rate\n")) +
   labs(x = "Year",
+       y = "Incidences",
        title = "Cancer incidence in NHS Borders",
        subtitle = "Number of New Cases Per Year and Crude Rate") +
+  #Can't work out why the legend below isn't working
+  scale_fill_discrete(name = "Sex", labels = c("a", "b")) +
   theme_minimal()
+```
+
+```{r}
+#Will need to understand and be able to explain how the geom_smooth is working in this particular case.
+borders_data %>%
+  filter(cancer_site == "All cancer types",
+         sex != "All") %>%
+ggplot() +
+  aes(x = year, y = incidences_all_ages, colour = sex) +
+  geom_smooth(linetype = "dashed") +
+  geom_smooth(aes(x = year, y = crude_rate)) +
+  scale_x_continuous(breaks = seq(1994, 2018, by = 2 )) +
+  scale_y_continuous(sec.axis = sec_axis(~./8, name = "Crude Rate\n")) +
+  labs(x = "Year",
+       y = "Incidences",
+       title = "Cancer incidence in NHS Borders",
+       subtitle = "Number of New Cases Per Year and Crude Rate") +
+  #Can't work out why the legend below isn't working
+  scale_fill_discrete(name = "Sex", labels = c("a", "b")) +
+  theme_minimal()
+```
+
+2. Figure 4. Most common 20 cancers in Scotland in 2016 for females and males (ordered by total for all persons)
+
+```{r}
+#Could have worked out a different way to arrange by total and then mutated this into a new column rather than combining the male and female figures afterwards. 
+chart_2_borders_data <-
+borders_data %>% 
+  filter(year == 2016,
+         sex != "All",
+         cancer_site != "All cancer types"
+        ) %>% 
+  mutate(name_and_code = str_c(cancer_site, " (", cancer_site_icd10code, ")")) %>%
+  mutate(name_and_code = str_remove(name_and_code, "ICD-10 "))
+
+
+chart_2_borders_data
+```
+
+```{r}
+#Think this is right but can always check when we make the graph
+chart_2_border_scot_top_20 <-
+chart_2_borders_data %>%
+  filter(cancer_site %in% c("Trachea, bronchus and lung",
+                            "Breast",
+                            "Colorectal cancer",
+                            "Prostate",
+                            "Malignant melanoma of the skin",
+                            "Head and neck",
+                            "Non-Hodgkin lymphoma",
+                            "Kidney",
+                            "Bladder",
+                            "Oesophagus", 
+                            "Pancreas",
+                            "Corpus uteri",
+                            "Stomach",
+                            "Leukaemias", 
+                            "Ovary",
+                            "Liver and intrahepatic bile ducts", 
+                            "Multiple myeloma and malignant plasma cell neoplasms",
+                            "Brain and other CNS",
+                            "Cervix uteri",
+                            "Thyroid")) %>% 
+  
+  mutate(cancer_site = factor(cancer_site, levels = c("Trachea, bronchus and lung",
+                            "Breast",
+                            "Colorectal cancer",
+                            "Prostate",
+                            "Malignant melanoma of the skin",
+                            "Head and neck",
+                            "Non-Hodgkin lymphoma",
+                            "Kidney",
+                            "Bladder",
+                            "Oesophagus", 
+                            "Pancreas",
+                            "Corpus uteri",
+                            "Stomach",
+                            "Leukaemias", 
+                            "Ovary",
+                            "Liver and intrahepatic bile ducts", 
+                            "Multiple myeloma and malignant plasma cell neoplasms",
+                            "Brain and other CNS",
+                            "Cervix uteri",
+                            "Thyroid")))
+
+
+chart_2_border_scot_top_20  
+  
+```
+
+```{r}
+#Need to find a way to flip the female and male dodges. Also, should rename a couple of the cancer_sites
+chart_2_border_scot_top_20 %>% 
+  ggplot() +
+  aes(x = incidences_all_ages, 
+      y = reorder(cancer_site, 
+                  desc(cancer_site)), 
+                  fill = sex) +
+  geom_col(position = "dodge") +
+  labs(y = "") +
+  theme(axis.text.y = element_text(size = 8))
+
+
+ 
 ```
 
 ```{r}
@@ -156,10 +269,6 @@ ggplot() +
   ) +
   theme_minimal()
 ```
-
-
-
-2. Figure 4. Most common 20 cancers in Scotland in 2016 for females and males (ordered by total for all persons)
 
 3. Figure 5. 10 year percentage change in incidence rate for 20 most common cancers in Scotland
 
