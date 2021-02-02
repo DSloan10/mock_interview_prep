@@ -88,4 +88,29 @@ ggplot() +
   theme(legend.position = "none")
 ```
 
+```{r}
+
+```
+
+```{r}
+#I mean, we could take this as the first graph and compare this with population growth in the area. Although to be honest, we'd be better off just looking at the rate. 
+borders_data %>% 
+filter(cancer_site == "All cancer types",
+       sex == "All") %>%
+ggplot() +
+  aes(x = year, y = incidences_all_ages, color = cancer_site) +
+  geom_line() +
+  theme(legend.position = "none")
+```
+
+```{r}
+borders_data %>% 
+filter(cancer_site == "All cancer types",
+       sex == "All") %>%
+ggplot() +
+  geom_line(aes(x = year, y = incidences_all_ages), colour = "blue") +
+  geom_point(aes(x = year, y = crude_rate), colour = "red") +
+  geom_line (aes(x = year, y = crude_rate), colour = "red")
+```
+```
 
