@@ -114,8 +114,8 @@ ggplot() +
 ```
 
 ```{r}
-borders_data %>% 
-  mutate(total_incidences = )
+# borders_data %>% 
+#  mutate(total_incidences = )
 ```
 
 Right, the above idea can be left for later. For now, I want to replicate three graphs that have been provided for the overall Scottish context. These graphs are contained in the Cancer Incidence in Scotland (2016) report. Here is the plan (refer back to the document for visual reference):
@@ -126,8 +126,37 @@ incidence rate by sex.
 
 ```{r}
 borders_data %>%
-  
+  filter(cancer_site == "All cancer types",
+         sex != "All") %>%
+ggplot() +
+  aes(x = year, y = incidences_all_ages, colour = sex) +
+  geom_line(linetype = "dashed") +
+  geom_line(aes(x = year, y = crude_rate)) +
+  scale_x_continuous(breaks = 2) +
+  scale_y_continuous(sec.axis = sec_axis(~./8, name = "\n")) +
+  labs(x = "Year",
+       title = "Cancer incidence in NHS Borders",
+       subtitle = "Number of New Cases Per Year and Crude Rate") +
+  theme_minimal()
 ```
+
+```{r}
+  ggplot() +
+  geom_col(aes(x = start_month, y = total_bike_hires)) +
+  coord_flip() +
+  geom_point(aes(x = start_month, y = avg_monthly_temp*8), colour = "blue") +
+  geom_line(aes(x = start_month, y = avg_monthly_temp*8), group = 1, colour = "blue") +
+  scale_y_continuous(name = "Total Bike Hires\n", 
+                     sec.axis = sec_axis(~./8, name = "Average Temperatures °F (Central Park)\n")) +
+  labs(x = "Start Month",
+       title = "Bike Hires vs Temperature (2018)\n") +
+  theme(
+    axis.title.x = element_text(color = "blue"),
+    axis.title.x.bottom = element_text(color = "black")
+  ) +
+  theme_minimal()
+```
+
 
 
 2. Figure 4. Most common 20 cancers in Scotland in 2016 for females and males (ordered by total for all persons)
