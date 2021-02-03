@@ -230,7 +230,10 @@ chart_2_borders_data %>%
                             "Multiple myeloma and malignant plasma cell neoplasms",
                             "Brain and other CNS",
                             "Cervix uteri",
-                            "Thyroid")))
+                            "Thyroid"))) %>% 
+  
+  mutate(cancer_site = recode(cancer_site,
+                              "Multiple myeloma and malignant plasma cell neoplasms" = "Multiple myeloma, mal plasma cell neo"))
 
 
 chart_2_border_scot_top_20  
@@ -245,30 +248,127 @@ chart_2_border_scot_top_20 %>%
       y = reorder(cancer_site, 
                   desc(cancer_site)), 
                   fill = sex) +
-  geom_col(position = "dodge") +
-  labs(y = "") +
-  theme(axis.text.y = element_text(size = 8))
+  geom_col(position = position_dodge2(reverse = TRUE)) +
+  labs(x = "Number of registration",
+       y = "") +
+  theme(axis.text.y = element_text(size = 7)) +
+  theme_classic()
 
 
  
 ```
 
 ```{r}
-  ggplot() +
-  geom_col(aes(x = start_month, y = total_bike_hires)) +
-  coord_flip() +
-  geom_point(aes(x = start_month, y = avg_monthly_temp*8), colour = "blue") +
-  geom_line(aes(x = start_month, y = avg_monthly_temp*8), group = 1, colour = "blue") +
-  scale_y_continuous(name = "Total Bike Hires\n", 
-                     sec.axis = sec_axis(~./8, name = "Average Temperatures °F (Central Park)\n")) +
-  labs(x = "Start Month",
-       title = "Bike Hires vs Temperature (2018)\n") +
-  theme(
-    axis.title.x = element_text(color = "blue"),
-    axis.title.x.bottom = element_text(color = "black")
-  ) +
-  theme_minimal()
+
 ```
 
 3. Figure 5. 10 year percentage change in incidence rate for 20 most common cancers in Scotland
+
+```{r}
+chart_3_borders_data <-
+borders_data %>% 
+  filter(sex != "All",
+         cancer_site != "All cancer types"
+        ) %>% 
+  mutate(name_and_code = str_c(cancer_site, " (", cancer_site_icd10code, ")")) %>%
+  mutate(name_and_code = str_remove(name_and_code, "ICD-10 "))
+
+
+chart_3_borders_data
+```
+
+```{r}
+chart_3_border_scot_top_20 <-
+chart_3_borders_data %>%
+  filter(cancer_site %in% c("Trachea, bronchus and lung",
+                            "Breast",
+                            "Colorectal cancer",
+                            "Prostate",
+                            "Malignant melanoma of the skin",
+                            "Head and neck",
+                            "Non-Hodgkin lymphoma",
+                            "Kidney",
+                            "Bladder",
+                            "Oesophagus", 
+                            "Pancreas",
+                            "Corpus uteri",
+                            "Stomach",
+                            "Leukaemias", 
+                            "Ovary",
+                            "Liver and intrahepatic bile ducts", 
+                            "Multiple myeloma and malignant plasma cell neoplasms",
+                            "Brain and other CNS",
+                            "Cervix uteri",
+                            "Thyroid")) %>% 
+  
+  mutate(cancer_site = factor(cancer_site, levels = c("Trachea, bronchus and lung",
+                            "Breast",
+                            "Colorectal cancer",
+                            "Prostate",
+                            "Malignant melanoma of the skin",
+                            "Head and neck",
+                            "Non-Hodgkin lymphoma",
+                            "Kidney",
+                            "Bladder",
+                            "Oesophagus", 
+                            "Pancreas",
+                            "Corpus uteri",
+                            "Stomach",
+                            "Leukaemias", 
+                            "Ovary",
+                            "Liver and intrahepatic bile ducts", 
+                            "Multiple myeloma and malignant plasma cell neoplasms",
+                            "Brain and other CNS",
+                            "Cervix uteri",
+                            "Thyroid"))) %>% 
+  
+  mutate(cancer_site = recode(cancer_site,
+                              "Multiple myeloma and malignant plasma cell neoplasms" = "Multiple myeloma, mal plasma cell neo"))
+
+
+chart_3_border_scot_top_20  
+  
+```
+
+
+```{r}
+chart_3_selection <-
+chart_3_border_scot_top_20 %>%
+  select(cancer_site, sex, year, incidences_all_ages, crude_rate, easr, wasr, cancer_site_icd10code)
+
+chart_3_selection
+```
+
+```{r}
+#Thinking I'll pivot wider here so I can get a quick figure for each of the rates and incidence. Actually, just realized, I only need years 2006 and 2016. 
+chart_3_2006_2016 <-
+chart_3_selection %>%
+  filter(year %in% c(2006, 2016))
+
+chart_3_2006_2016
+  
+```
+
+```{r}
+chart_3_pivot <-
+chart_3_2006_2016 %>%
+  pivot_wider(names_from = year,
+              values_from = c(incidences_all_ages, crude_rate, easr, wasr))
+
+chart_3_pivot
+```
+```{r}
+chart_3_pivot_and_diff <-
+chart_3_pivot %>% 
+  mutate(crude_ten_year_diff = crude_rate_2016 - crude_rate_2006) %>% 
+  mutate(incid_ten_year_diff = incidences_all_ages_2016 - incidences_all_ages_2006) %>%
+  mutate(easr_ten_year_diff = easr_2016 - easr_2006) %>%
+  mutate(wasr_ten_year_diff = wasr_2016 - wasr_2006)
+
+chart_3_pivot_and_diff
+```
+
+```{r}
+
+```
 
