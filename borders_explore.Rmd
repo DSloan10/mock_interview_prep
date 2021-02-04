@@ -129,28 +129,63 @@ Right, the above idea can be left for later. For now, I want to replicate three 
 1. Cancer incidence in Scotland, 1992-2016. Number of cases and age-adjusted
 incidence rate by sex.
 
+**Note on trends**
+**It may be misleading to focus too much attention on any apparent changes in incidence between 2015 and 2016; it is more informative to examine trends in incidence observed over a number of years. Striking changes from one year to the next may occur in the case of rare cancers, but these are likely to reflect random fluctuation caused by small numbers of cases - in such cases, it is even more important to examine incidence rates for a number of years aggregated together, rather than focusing on a single year of incidence**
+
+**The number and type of cancer registrations, by sex and geography, allow planning for provision of cancer treatment services and palliative care planning. Permits indirect measure of success of public health measures and interventions over the longer term. Key uses include: public health surveillance; health needs assessment, planning and commissioning of cancer services; evaluation of the impact of interventions on incidence and survival; clinical audit and health services research; epidemiological studies; and providing information to support genetic counselling and health promotion.**
+
 ```{r}
 #These graphs can be easily changed later on to accommodate other rates, especially when we look a bit further into the easr and wasr rates.
+
+#What is going on with the fluctuations among female rates here!!???
+
 borders_data %>%
   filter(cancer_site == "All cancer types",
          sex != "All") %>%
 ggplot() +
-  aes(x = year, y = incidences_all_ages, colour = sex) +
-  geom_line(linetype = "dashed") +
-  geom_line(aes(x = year, y = crude_rate)) +
+  geom_line(aes(x = year, y = incidences_all_ages, colour = sex), linetype = "dashed") +
+  geom_line(aes(x = year, y = crude_rate, colour = sex)) +
   scale_x_continuous(breaks = seq(1994, 2018, by = 2 )) +
-  scale_y_continuous(sec.axis = sec_axis(~./8, name = "Crude Rate\n")) +
+  scale_y_continuous(sec.axis = sec_axis(~./8, name = "Crude Rate (Solid)\n")) +
   labs(x = "Year",
-       y = "Incidences",
+       y = "Incidences (Dashed)",
        title = "Cancer incidence in NHS Borders",
        subtitle = "Number of New Cases Per Year and Crude Rate") +
+  theme_minimal()
+  #theme(legend.title = element_text(size = 4)) +
+  #scale_linetype_manual(name = "a")
   #Can't work out why the legend below isn't working
-  scale_fill_discrete(name = "Sex", labels = c("a", "b")) +
+  #scale_fill_discrete(name = "Sex", labels = c("a", "b")) +
+  
+```
+```{r}
+borders_data %>% 
+  filter(sex == "Female")
+```
+
+
+
+```{r}
+borders_data %>%
+  filter(cancer_site == "All cancer types",
+         sex != "All") %>%
+ggplot() +
+  geom_line(aes(x = year, y = incidences_all_ages, colour = sex), linetype = "dashed", show.legend = TRUE) +
+  geom_line(aes(x = year, y = easr, colour = sex), show.legend = TRUE) +
+  scale_x_continuous(breaks = seq(1994, 2018, by = 2 )) +
+  scale_y_continuous(sec.axis = sec_axis(~./8, name = "EASR Rate (Solid)\n")) +
+  labs(x = "Year",
+       y = "Incidences (Dashed)",
+       title = "Cancer incidence in NHS Borders",
+       subtitle = "Number of New Cases Per Year and EASR Rate") +
+  #Can't work out why the legend below isn't working
+  #scale_fill_discrete(name = "Sex", labels = c("a", "b")) +
   theme_minimal()
 ```
 
+
 ```{r}
-#Will need to understand and be able to explain how the geom_smooth is working in this particular case.
+#Will need to understand and be able to explain how the geom_smooth is working in this particular case. Also, will be intesting to address exactly why the incidents seem to flutuate up and down to such a large ever year or two. 
 borders_data %>%
   filter(cancer_site == "All cancer types",
          sex != "All") %>%
@@ -207,7 +242,7 @@ chart_2_borders_data %>%
                             "Ovary",
                             "Liver and intrahepatic bile ducts", 
                             "Multiple myeloma and malignant plasma cell neoplasms",
-                            "Brain and other CNS",
+                            "Malig brain ca (incl pit. gland, cranio. duct, pineal gland)",
                             "Cervix uteri",
                             "Thyroid")) %>% 
   
@@ -228,12 +263,13 @@ chart_2_borders_data %>%
                             "Ovary",
                             "Liver and intrahepatic bile ducts", 
                             "Multiple myeloma and malignant plasma cell neoplasms",
-                            "Brain and other CNS",
+                            "Malig brain ca (incl pit. gland, cranio. duct, pineal gland)",
                             "Cervix uteri",
                             "Thyroid"))) %>% 
   
   mutate(cancer_site = recode(cancer_site,
-                              "Multiple myeloma and malignant plasma cell neoplasms" = "Multiple myeloma, mal plasma cell neo"))
+                              "Multiple myeloma and malignant plasma cell neoplasms" = "Multiple myeloma, mal plasma cell neo",
+                              "Malig brain ca (incl pit. gland, cranio. duct, pineal gland)" = "Brain and other CNS"))
 
 
 chart_2_border_scot_top_20  
@@ -241,7 +277,7 @@ chart_2_border_scot_top_20
 ```
 
 ```{r}
-#Need to find a way to flip the female and male dodges. Also, should rename a couple of the cancer_sites
+#Need to find a way to flip the female and male dodges. Also, should rename a couple of the cancer_sites - DONE BOTH
 chart_2_border_scot_top_20 %>% 
   ggplot() +
   aes(x = incidences_all_ages, 
@@ -249,17 +285,20 @@ chart_2_border_scot_top_20 %>%
                   desc(cancer_site)), 
                   fill = sex) +
   geom_col(position = position_dodge2(reverse = TRUE)) +
-  labs(x = "Number of registration",
+  labs(title = "Most common 20 cancers in Scotland in 2016 for males and females",
+       subtitle = "NHS Borders figures",
+       x = "Number of new registrations",
        y = "") +
+  scale_fill_discrete(name = "") +
+  theme_classic() +
   theme(axis.text.y = element_text(size = 7)) +
-  theme_classic()
+  theme(axis.title.x.bottom = element_text(size = 8)) +
+  theme(plot.title = element_text(size = 10, face = 'bold')) +
+  theme(plot.subtitle = element_text(size = 8))
+  
 
 
  
-```
-
-```{r}
-
 ```
 
 3. Figure 5. 10 year percentage change in incidence rate for 20 most common cancers in Scotland
@@ -297,33 +336,35 @@ chart_3_borders_data %>%
                             "Ovary",
                             "Liver and intrahepatic bile ducts", 
                             "Multiple myeloma and malignant plasma cell neoplasms",
-                            "Brain and other CNS",
+                            "Malig brain ca (incl pit. gland, cranio. duct, pineal gland)",
                             "Cervix uteri",
                             "Thyroid")) %>% 
   
-  mutate(cancer_site = factor(cancer_site, levels = c("Trachea, bronchus and lung",
-                            "Breast",
-                            "Colorectal cancer",
-                            "Prostate",
-                            "Malignant melanoma of the skin",
-                            "Head and neck",
-                            "Non-Hodgkin lymphoma",
-                            "Kidney",
-                            "Bladder",
-                            "Oesophagus", 
-                            "Pancreas",
-                            "Corpus uteri",
+  mutate(cancer_site = factor(cancer_site, levels = c(
                             "Stomach",
                             "Leukaemias", 
+                            "Colorectal cancer",
+                            "Trachea, bronchus and lung",
                             "Ovary",
-                            "Liver and intrahepatic bile ducts", 
+                            "Oesophagus", 
+                            "Malig brain ca (incl pit. gland, cranio. duct, pineal gland)",
+                            "Non-Hodgkin lymphoma",
+                            "Prostate",
+                            "Bladder",
+                            "Breast",
                             "Multiple myeloma and malignant plasma cell neoplasms",
-                            "Brain and other CNS",
+                            "Pancreas",
+                            "Head and neck",
                             "Cervix uteri",
+                            "Malignant melanoma of the skin",
+                            "Corpus uteri",
+                            "Kidney",
+                            "Liver and intrahepatic bile ducts",
                             "Thyroid"))) %>% 
   
   mutate(cancer_site = recode(cancer_site,
-                              "Multiple myeloma and malignant plasma cell neoplasms" = "Multiple myeloma, mal plasma cell neo"))
+                              "Multiple myeloma and malignant plasma cell neoplasms" = "Multiple myeloma, mal plasma cell neo",
+                              "Malig brain ca (incl pit. gland, cranio. duct, pineal gland)" = "Brain and other CNS"))
 
 
 chart_3_border_scot_top_20  
@@ -367,8 +408,95 @@ chart_3_pivot %>%
 
 chart_3_pivot_and_diff
 ```
-
 ```{r}
 
+```
+
+
+```{r}
+#Had a bit of trouble with directly comparing this one to the one in the report. Because of the relatively low numbers of new incidents among certain cancers, the percentage change of rate was throwing up some highly misleading results (anywhere between -150 to 340, not including the one example of infinity). It would be interesting to see what figures the original graph actually refers to. Maybe, if there is spare time, we can plot it. However, instead, I decided to go for two graphs that although not directly comparable, certainly provide a better insight than the aforementioned graph. 
+
+#The first is the straight up difference in crude rate, defined as
+
+#"The number of cases divided by the population. The crude rate does not
+#attempt to adjust for differences in age and sex structures between
+#different populations (see European age-standardised rate below).
+#Typically expressed as the number of cases per 100,000 population."
+
+chart_3_pivot_and_diff %>%
+  ggplot() +
+  aes(x = crude_ten_year_diff, 
+      y = cancer_site,
+      fill = sex) +
+  geom_col(position = position_dodge2(reverse = FALSE)) +
+  scale_x_continuous(breaks = seq(from = -20, to = 60, by = 20)) +
+    labs(title = "10-year absolute change in incidence rate for 20 most common cancers in Scotland",
+         subtitle = "NHS Borders: 2006 compared to 2016",
+      x = "10-year annual rate absolute change",
+       y = "") +
+  scale_fill_discrete(name = "", breaks = c("Male", "Female")) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 7)) +
+  theme(axis.title.x.bottom = element_text(size = 8)) +
+  theme(plot.title = element_text(size = 10, face = 'bold')) +
+  theme(plot.subtitle = element_text(size = 8))
+  
+  
+```
+
+```{r}
+#The second is simply the change in annual incidences, which after doing it I realise is just pretty much to same as the above. 
+
+chart_3_pivot_and_diff %>%
+  ggplot() +
+    aes(x = incid_ten_year_diff, 
+      y = cancer_site,
+      fill = sex) +
+  geom_col(position = position_dodge2(reverse = FALSE)) +
+  labs(x = "10-year annual rate absolute change",
+       y = "") +
+  theme(axis.text.y = element_text(size = 7))
+  
+  
+```
+
+```{r}
+chart_3_pivot_and_diff %>%
+  ggplot() +
+  aes(x = easr_ten_year_diff, 
+      y = cancer_site,
+      fill = sex) +
+  geom_col(position = position_dodge2(reverse = FALSE)) +
+    labs(title = "10-year EASR change in incidence rate for 20 most common cancers in Scotland",
+         subtitle = "NHS Borders: 2006 compared to 2016",
+      x = "10-year EASR change",
+       y = "") +
+  scale_fill_discrete(name = "", breaks = c("Male", "Female")) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 7)) +
+  theme(axis.title.x.bottom = element_text(size = 8)) +
+  theme(plot.title = element_text(size = 10, face = 'bold')) +
+  theme(plot.subtitle = element_text(size = 8))
+  
+```
+
+```{r}
+chart_3_pivot_and_diff %>%
+  ggplot() +
+  aes(x = wasr_ten_year_diff, 
+      y = cancer_site,
+      fill = sex) +
+  geom_col(position = position_dodge2(reverse = FALSE)) +
+    labs(title = "10-year WASR change in incidence rate for 20 most common cancers in Scotland",
+         subtitle = "NHS Borders: 2006 compared to 2016",
+      x = "10-year WASR change",
+       y = "") +
+  scale_fill_discrete(name = "", breaks = c("Male", "Female")) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 7)) +
+  theme(axis.title.x.bottom = element_text(size = 8)) +
+  theme(plot.title = element_text(size = 10, face = 'bold')) +
+  theme(plot.subtitle = element_text(size = 8))
+  
 ```
 

@@ -1,0 +1,58 @@
+---
+title: "NHS_Borders_Incidence_Report"
+output: html_document
+---
+
+In order to answer the 
+
+OK, so what becomes immedietely apparent is that the data doesn't seem to be broken down into age group. Instead, we are only given an incidences_all_ages column, along with wath is described as a "crude rate". For a task in this timeframe, with one person non-technical interviewing and with five minutes to talk about, I don't think it would be useful to go to deeply into the confidence intervals at this stage. If we are struggling for useful (i.e. *actionable*) insights, then using some of these 95 confidence intervals could be good as a last resort. 
+
+What we do have is a breakdown of different types of cancer, and a breakdown in terms of the sexes. We should be able to get some insights here, but what conclusions could be drawn linking back to the "planning for provision of cancer treatment services in NHS Borders". We might have to compare rates to that of surrounding health boards, the overall region and Scotland as a whole. Think it might be best to just play about with this first lot of data tonight though and see if there are any striking figures in terms of types of cancer over the years. 
+
+For now, I want to replicate three graphs that have been provided for the overall Scottish context. These graphs are contained in the *Cancer Incidence in Scotland (2016)* report, published in 2018. Here is the plan (refer back to the document for visual reference):
+
+**1. Cancer incidence in Scotland, 1992-2016. Number of cases and age-adjusted incidence rate by sex.**
+
+[Add in table]
+
+
+```{r}
+#These graphs can be easily changed later on to accommodate other rates, especially when we look a bit further into the easr and wasr rates.
+
+#What is going on with the fluctuations among female rates here!!???
+
+borders_data %>%
+  filter(cancer_site == "All cancer types",
+         sex != "All") %>%
+ggplot() +
+  geom_line(aes(x = year, y = incidences_all_ages, colour = sex), linetype = "dashed") +
+  geom_line(aes(x = year, y = crude_rate, colour = sex)) +
+  scale_x_continuous(breaks = seq(1994, 2018, by = 2 )) +
+  scale_y_continuous(sec.axis = sec_axis(~./8, name = "Crude Rate (Solid)\n")) +
+  labs(x = "Year",
+       y = "Incidences (Dashed)",
+       title = "Cancer incidence in NHS Borders",
+       subtitle = "Number of New Cases Per Year and Crude Rate (All Cancers)") +
+  theme_minimal()
+  #theme(legend.title = element_text(size = 4)) +
+  #scale_linetype_manual(name = "a")
+  #Can't work out why the legend below isn't working
+  #scale_fill_discrete(name = "Sex", labels = c("a", "b")) +
+  
+```
+
+The first thing that is immediately apparent here is that among females there is a clear fluctuation in the number of incidences and the overall rate as a result of this. It seems that ever two or three years there is a relative spike in cases, and then a symetric decline before the sequence is repeated. Rather than being natural, this strikes me as an administrative phenomenon, perhaps in the manner that certain types of cancers are registered. Having tried to investigate this, I did not find a definitive answer. Considering a similar phenomenon is apparent in the original All Scotland table above, I'd say this requires further investigation. 
+
+**Another note on fluctuating trends**
+
+As the report states, it may be misleading to focus too much attention on any apparent changes in incidence between 2015 and 2016; it is more informative to examine trends in incidence observed over a number of years. Striking changes from one year to the next may occur in the case of rare cancers, but these are likely to reflect random fluctuation caused by small numbers of cases - in such cases, it is even more important to examine incidence rates for a number of years aggregated together, rather than focusing on a single year of incidence**
+
+**With this in mind, I decided to smooth out the overall rates 
+
+
+
+
+
+
+
+According to the accompanying documentation, "Confidence intervals for age-standardised rates (EASR and WASR) have been calculated using a formula which works only when numbers are sufficiently large. They are therefore set to 'not applicable' in the event of there being fewer than 20 cases."
