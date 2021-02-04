@@ -3,17 +3,21 @@ title: "NHS_Borders_Incidence_Report"
 output: html_document
 ---
 
-In order to answer the 
+In order to create a report in line with the brief, I decided to focus mainly on the dataset containing details of cancer incidences and rates in different health board areas.
 
-OK, so what becomes immedietely apparent is that the data doesn't seem to be broken down into age group. Instead, we are only given an incidences_all_ages column, along with wath is described as a "crude rate". For a task in this timeframe, with one person non-technical interviewing and with five minutes to talk about, I don't think it would be useful to go to deeply into the confidence intervals at this stage. If we are struggling for useful (i.e. *actionable*) insights, then using some of these 95 confidence intervals could be good as a last resort. 
+Unlike the national data, the regional data isn't broken down into age group. Instead, we are only given an incidences_all_ages column, along with with is described as a "crude rate". For a task in this time frame and presentation length, I decided to focus on the incidence numbers and the crude rate, rather than exploring the EASR (European Age Standardized RAte), WASR (World...) and figures related to their respective confidence intervals. For reference, the crude rate is defined as follows:
 
-What we do have is a breakdown of different types of cancer, and a breakdown in terms of the sexes. We should be able to get some insights here, but what conclusions could be drawn linking back to the "planning for provision of cancer treatment services in NHS Borders". We might have to compare rates to that of surrounding health boards, the overall region and Scotland as a whole. Think it might be best to just play about with this first lot of data tonight though and see if there are any striking figures in terms of types of cancer over the years. 
+"The number of cases divided by the population. The crude rate does not
+attempt to adjust for differences in age and sex structures between
+different populations (see EASR, WASR etc.).Typically expressed as the number of cases per 100,000 population."
 
-For now, I want to replicate three graphs that have been provided for the overall Scottish context. These graphs are contained in the *Cancer Incidence in Scotland (2016)* report, published in 2018. Here is the plan (refer back to the document for visual reference):
+What we do have is a breakdown of different types of cancer, and a breakdown in terms of the sexes. We should be able to get some insights here with a focus on conclusions  linking back to the "planning for provision of cancer treatment services in NHS Borders". 
+
+With this in mind, I wanted to focus on clear differences between NHS Borders figures and overall national figures in order to highlight any major divergences. I decided to replicate three graphs that have been provided for the overall Scottish context. These graphs are contained in the *Cancer Incidence in Scotland (2016)* report, published in 2018:
 
 **1. Cancer incidence in Scotland, 1992-2016. Number of cases and age-adjusted incidence rate by sex.**
 
-[Add in table]
+[ADD in Figure 1.]
 
 
 ```{r}
@@ -47,12 +51,99 @@ The first thing that is immediately apparent here is that among females there is
 
 As the report states, it may be misleading to focus too much attention on any apparent changes in incidence between 2015 and 2016; it is more informative to examine trends in incidence observed over a number of years. Striking changes from one year to the next may occur in the case of rare cancers, but these are likely to reflect random fluctuation caused by small numbers of cases - in such cases, it is even more important to examine incidence rates for a number of years aggregated together, rather than focusing on a single year of incidence**
 
-**With this in mind, I decided to smooth out the overall rates 
+**With this in mind, I decided to smooth out the overall rates for cancer incidences and crude rates by Male and Female in NHS Borders:**
+
+```{r}
+#Will need to understand and be able to explain how the geom_smooth is working in this particular case. Also, will be interesting to address exactly why the incidents seem to fluctuate up and down to such a large ever year or two. 
+borders_data %>%
+  filter(cancer_site == "All cancer types",
+         sex != "All") %>%
+ggplot() +
+  aes(x = year, y = incidences_all_ages, colour = sex) +
+  geom_smooth(linetype = "dashed") +
+  geom_smooth(aes(x = year, y = crude_rate)) +
+  scale_x_continuous(breaks = seq(1994, 2018, by = 2 )) +
+  scale_y_continuous(sec.axis = sec_axis(~./8, name = "Crude Rate (Solid)\n")) +
+  labs(x = "Year",
+       y = "Incidences (Dashed)",
+       title = "Cancer incidence in NHS Borders",
+       subtitle = "Number of New Cases Per Year and Crude Rate (All Cancers)") +
+  #Can't work out why the legend below isn't working
+  scale_fill_discrete(name = "Sex", labels = c("a", "b")) +
+  theme_minimal()
+```
+
+So, taking out the fluctuating trends among Female cancer cases, we see that Male cancer rates appear to have overtaken Female cancer rates, with a gap that looks like it will be maintained in the coming years. This gap is mirrored to an extent in the original All Scotland map above, although in recent years (up to 2016), this gap appeared to be narrowing.
+
+The next figure from the aforementioned annual report addresses the 20 most common types of cancer in Scotland in the year 2016:
+
+[ADD in Figure 4]
+
+To provide a more useful comparison, I decided to create a similar graph, with the different cancer types arranged in the same order on the y-axis.
+
+```{r}
+#Need to find a way to flip the female and male dodges. Also, should rename a couple of the cancer_sites - DONE BOTH
+chart_2_border_scot_top_20 %>% 
+  ggplot() +
+  aes(x = incidences_all_ages, 
+      y = reorder(cancer_site, 
+                  desc(cancer_site)), 
+                  fill = sex) +
+  geom_col(position = position_dodge2(reverse = TRUE)) +
+  labs(title = "Most common 20 cancers in Scotland in 2016 for males and females",
+       subtitle = "NHS Borders figures",
+       x = "Number of new registrations",
+       y = "") +
+  scale_fill_discrete(name = "") +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 7)) +
+  theme(axis.title.x.bottom = element_text(size = 8)) +
+  theme(plot.title = element_text(size = 10, face = 'bold')) +
+  theme(plot.subtitle = element_text(size = 8))
+ 
+```
+
+Naturally, the x-axis in this case shows a scale with far smaller measurements than the original plot. However, I think comparing the two visuals is quite useful for immediately assessing the relative prevalence of different types of cancers on a regional and national scale. 
+
+The final plot from the original report that I wanted to replicate was a graph that showed the 10 year percentage change in the above cancers between 2006 and 2016:
+
+[ADD in Figure 5]
+
+Once again, the aim here was to try to create a replicate plot for NHS Borders that showed some of the comparable changes over the same time frame. In addressing the above graph, I understood that the "10 year % change" referred to was a relative one. However, in trying to replicate a relative percentage change I had a couple of problems. Because of the relatively low numbers of new incidents among certain cancers, the percentage change of rate was throwing up some highly misleading results (anywhere between -150 to 340, not including the one example of infinity). Instead, I decided to go for a graph that although not directly comparable, certainly provides a better insight:
+
+```{r}
+#Had a bit of trouble with directly comparing this one to the one in the report. Because of the relatively low numbers of new incidents among certain cancers, the percentage change of rate was throwing up some highly misleading results (anywhere between -150 to 340, not including the one example of infinity). It would be interesting to see what figures the original graph actually refers to. Maybe, if there is spare time, we can plot it. However, instead, I decided to go for two graphs that although not directly comparable, certainly provide a better insight than the aforementioned graph. 
+
+#The first is the straight up difference in crude rate, defined as
+
+#"The number of cases divided by the population. The crude rate does not
+#attempt to adjust for differences in age and sex structures between
+#different populations (see European age-standardised rate below).
+#Typically expressed as the number of cases per 100,000 population."
+
+chart_3_pivot_and_diff %>%
+  ggplot() +
+  aes(x = crude_ten_year_diff, 
+      y = cancer_site,
+      fill = sex) +
+  geom_col(position = position_dodge2(reverse = FALSE)) +
+  scale_x_continuous(breaks = seq(from = -20, to = 60, by = 20)) +
+    labs(title = "10-year absolute change in incidence rate for 20 most common cancers in Scotland",
+         subtitle = "NHS Borders: 2006 compared to 2016",
+      x = "10-year annual rate absolute change",
+       y = "") +
+  scale_fill_discrete(name = "", breaks = c("Male", "Female")) +
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 7)) +
+  theme(axis.title.x.bottom = element_text(size = 8)) +
+  theme(plot.title = element_text(size = 10, face = 'bold')) +
+  theme(plot.subtitle = element_text(size = 8))
+  
+  
+```
+
+Once again, I've decide to keep the cancer types in the order that they are given in the original graph so that a more direct comparison can be made. 
 
 
 
 
-
-
-
-According to the accompanying documentation, "Confidence intervals for age-standardised rates (EASR and WASR) have been calculated using a formula which works only when numbers are sufficiently large. They are therefore set to 'not applicable' in the event of there being fewer than 20 cases."
